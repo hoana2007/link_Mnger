@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kho Link Cá Nhân - Personal Link Manager</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind Config -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- LOGIN CONTAINER -->
+  <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+    <div class="w-full max-w-md p-8 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl transform transition-all">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-500/10 text-brand-500 mb-4 ring-8 ring-brand-500/5">
+          <i class="fa-solid fa-vault text-2xl"></i>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Kho Link Cá Nhân</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Vui lòng nhập mật khẩu để truy cập</p>
+      </div>
+
+      <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Mật khẩu truy cập</label>
+          <div class="relative">
+            <input type="password" id="login-password" required placeholder="••••••••" 
+                   class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all text-slate-900 dark:text-white pl-11">
+            <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          </div>
+        </div>
+
+        <div id="login-error" class="hidden text-xs text-rose-500 bg-rose-50 dark:bg-rose-950/50 p-3 rounded-lg border border-rose-200 dark:border-rose-800 text-center">
+          Mật khẩu không chính xác. Vui lòng thử lại!
+        </div>
+
+        <button type="submit" id="login-btn"
+                class="w-full py-3.5 px-4 rounded-xl font-medium bg-brand-600 hover:bg-brand-700 text-white shadow-lg shadow-brand-500/25 transition-all flex items-center justify-center gap-2">
+          <span>Đăng nhập</span>
+          <i class="fa-solid fa-arrow-right text-sm"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <div id="app-screen" class="hidden min-h-screen flex flex-col">
+    
+    <!-- NAVBAR -->
+    <header class="sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 glass">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        
+        <!-- LOGO & COUNTER -->
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-500/10 text-brand-500">
+            <i class="fa-solid fa-bookmark text-lg"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-slate-900 dark:text-white text-base leading-tight">Link Vault</h1>
+            <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <span>Tổng số:</span>
+              <span id="total-count-badge" class="font-semibold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/50 px-2 py-0.5 rounded-full border border-brand-200 dark:border-brand-800">0 link</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SEARCH & CONTROLS -->
+        <div class="flex items-center gap-3">
+          <!-- API Settings button -->
+          <button onclick="openSettingsModal()" title="Cấu hình Google Sheets API" 
+                  class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+            <i class="fa-solid fa-gear"></i>
+          </button>
+
+          <!-- DARK/LIGHT TOGGLE -->
+          <button id="theme-toggle" onclick="toggleTheme()" title="Chuyển chế độ Sáng/Tối"
+                  class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+            <i class="fa-solid fa-moon dark:hidden"></i>
+            <i class="fa-solid fa-sun hidden dark:inline"></i>
+          </button>
+
+          <!-- LOGOUT -->
+          <button onclick="handleLogout()" title="Đăng xuất" 
+                  class="p-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-all">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT AREA -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      
+      <!-- TOOLBAR: SEARCH, KIND FILTER & ADD LINK BUTTON -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+        
+        <!-- SEARCH INPUT -->
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="search-input" oninput="filterAndRenderLinks()" placeholder="Tìm kiếm link, mô tả..."
+                 class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-slate-900 dark:text-white">
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- FILTER BY KIND DROPDOWN -->
+          <div class="relative min-w-[160px]">
+            <select id="kind-filter" onchange="filterAndRenderLinks()" 
+                    class="w-full appearance-none pl-4 pr-10 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-slate-900 dark:text-white cursor-pointer">
+              <option value="ALL">Tất cả thể loại (Kind)</option>
+            </select>
+            <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+          </div>
+
+          <!-- ADD LINK BUTTON -->
+          <button onclick="openAddModal()" 
+                  class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm shadow-md shadow-brand-500/20 transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>Thêm Link Mới</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- STATUS & NOTIFICATION BADGE -->
+      <div id="status-bar" class="hidden p-3 rounded-xl text-xs font-medium text-center"></div>
+
+      <!-- LINKS GRID / LIST -->
+      <div id="links-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Cards loaded dynamically -->
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div id="empty-state" class="hidden flex-col items-center justify-center py-16 text-center">
+        <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-3">
+          <i class="fa-regular fa-folder-open text-2xl"></i>
+        </div>
+        <h3 class="text-base font-semibold text-slate-700 dark:text-slate-300">Không tìm thấy link nào</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">Thử thay đổi bộ lọc hoặc thêm link mới vào kho lưu trữ của bạn.</p>
+      </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-slate-200 dark:border-slate-800 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
+      <p>Personal Link Manager • Tích hợp Google Sheets Database</p>
+    </footer>
+  </div>
+
+  <!-- MODAL: ADD NEW LINK -->
+  <div id="add-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="w-full max-w-lg p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700">
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-link text-brand-500"></i>
+          Thêm Link Mới
+        </h3>
+        <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="add-link-form" onsubmit="handleAddLink(event)" class="space-y-4 mt-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Đường dẫn Link (URL) *</label>
+          <input type="url" id="add-url" required placeholder="https://example.com" 
+                 class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Thể loại (Kind) *</label>
+          <input type="text" id="add-kind" required placeholder="Ví dụ: Lập trình, AI, Báo chí, Công cụ..." list="kind-suggestions"
+                 class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+          <datalist id="kind-suggestions">
+            <option value="Công nghệ"></option>
+            <option value="Thiết kế"></option>
+            <option value="Công cụ"></option>
+            <option value="Học tập"></option>
+            <option value="Giải trí"></option>
+          </datalist>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Mô tả (Description)</label>
+          <textarea id="add-description" rows="3" placeholder="Mô tả ngắn gọn về nội dung hoặc công dụng của link..."
+                    class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+          <button type="button" onclick="closeAddModal()" 
+                  class="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium text-sm hover:bg-slate-100 dark:hover:bg-slate-700/50">
+            Hủy
+          </button>
+          <button type="submit" id="add-submit-btn"
+                  class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm shadow-md shadow-brand-500/20 flex items-center gap-2">
+            <i class="fa-solid fa-check text-xs"></i>
+            Lưu Link
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: SETTINGS (APPS SCRIPT URL CONFIG) -->
+  <div id="settings-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="w-full max-w-md p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-brand-500"></i>
+          Cấu hình Kết nối Google Sheets
+        </h3>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 mt-4">
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Dán URL Google Apps Script Web App của bạn vào đây để kết nối với Google Sheet thực tế.
+        </p>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Google Apps Script Web App URL</label>
+          <input type="url" id="app-script-url" placeholder="https://script.google.com/macros/s/.../exec"
+                 class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Mật khẩu hệ thống (Cố định)</label>
+          <input type="text" id="config-password" placeholder="Mặc định: 123456"
+                 class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+          <button onclick="saveSettings()" 
+                  class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm shadow-md shadow-brand-500/20">
+            Lưu cấu hình
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>
