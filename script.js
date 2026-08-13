@@ -2,7 +2,7 @@
 let allLinks = [];
 let config = {
   scriptUrl: localStorage.getItem('script_url') || '',
-  password: localStorage.getItem('app_password') || '123456'
+  password: localStorage.getItem('app_password') || '*#Hoana2007'
 };
 
 // MOCK DATA FOR DEMO IF NO APPS SCRIPT URL IS PROVIDED
@@ -174,6 +174,9 @@ function filterAndRenderLinks() {
       (item.kind && item.kind.toLowerCase().includes(searchQuery));
     return matchesKind && matchesSearch;
   });
+
+  // Hiển thị theo thứ tự từ mới đến cũ (mới nhập vào trước, dựa theo stt)
+  filtered.sort((a, b) => (b.stt || 0) - (a.stt || 0));
 
   const badge = document.getElementById('total-count-badge');
   if (badge) badge.textContent = `${allLinks.length} link`;
